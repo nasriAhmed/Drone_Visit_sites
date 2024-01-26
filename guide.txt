@@ -1,0 +1,97 @@
+senoee-project/
+|-- app/
+|   |-- models.py
+|   |-- routes.py
+|-- tests/
+|    |-- test_routes.py
+|-- Dockerfile
+|-- requirements.txt
+|-- README.md
+
+Les étapes à suivre au niveau du projet:
+
+1- Créer un nouveau dossier:
+
+mkdir Senoee-project
+
+2- Création des fichiers :  "requirements.txt"  "Dockerfile"
+
+3- Création des fichiers "models.py" et "routes.py" sous le repertoire "app"
+
+4- Création du fichier "test_route" sous le repertoire "test"
+
+5- Ajoutez les dépendances du projet au "requirements.txt" :
+flask
+psycopg2-binary
+Flask-SQLAlchemy
+
+6- création de la base de données avec les relations entre les tableaux:
+
+CREATE TABLE Batch (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    firmware VARCHAR(255) NOT NULL,
+    compatible_hardware VARCHAR(255)[] NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Firmware (
+    id SERIAL PRIMARY KEY,
+    version VARCHAR(255) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    compatible_hardware VARCHAR(255)[] NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Content (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    mandatory BOOLEAN DEFAULT FALSE,
+    min_version VARCHAR(255),
+    max_version VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    firmware_id INTEGER REFERENCES Firmware(id)
+);
+
+CREATE TABLE Appraisor (
+    id SERIAL PRIMARY KEY,
+    nickname VARCHAR(255) NOT NULL,
+    mac VARCHAR(17) UNIQUE NOT NULL,
+    last_connection TIMESTAMP,
+    installed_firmware VARCHAR(255) NOT NULL,
+    hardware VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    batch_id INTEGER REFERENCES Batch(id)
+);
+
+CREATE TABLE appraisor_content (
+    appraisor_id INTEGER REFERENCES Appraisor(id),
+    content_id INTEGER REFERENCES Content(id),
+    PRIMARY KEY (appraisor_id, content_id)
+);
+
+7- remplissage du base de données:
+ 
+INSERT INTO Batch (name, firmware, compatible_hardware) VALUES
+('Batch1', 'Firmware1', '{"hardware1", "hardware2"}'),
+('Batch2', 'Firmware2', '{"hardware2", "hardware3"}');
+
+INSERT INTO Firmware (version, url, compatible_hardware) VALUES
+('1.0.0', 'https://firmware1.com', '{"hardware1", "hardware2"}'),
+('2.0.0', 'https://firmware2.com', '{"hardware2", "hardware3"}');
+
+INSERT INTO Content (name, url, mandatory, min_version, max_version, firmware_id) VALUES
+('Content1', 'https://content1.com', true, '1.0.0', '2.0.0', 1),
+('Content2', 'https://content2.com', false, null, null, 2);
+
+INSERT INTO Appraisor (nickname, mac, last_connection, installed_firmware, hardware, batch_id) VALUES
+('Drone1', 'AA:BB:CC:DD:EE:01', '2023-01-01', '1.0.0', 'hardware1', 1),
+('Drone2', 'AA:BB:CC:DD:EE:02', '2023-02-01', '2.0.0', 'hardware2', 2);
+
+INSERT INTO appraisor_content (appraisor_id, content_id) VALUES
+(1, 2);#
